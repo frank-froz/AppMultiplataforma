@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,48 +9,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF111111),
-        brightness: Brightness.light,
-      ),
-      scaffoldBackgroundColor: const Color(0xFFF7F7F8),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0.5,
-        centerTitle: false,
-      ),
-      cardTheme: CardThemeData(
-        color: Colors.white,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: EdgeInsets.zero,
-      ),
-      listTileTheme: const ListTileThemeData(
-        tileColor: Colors.transparent,
-        horizontalTitleGap: 12,
-      ),
-      textTheme: const TextTheme(
-        headlineSmall: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
-        bodyLarge: TextStyle(fontSize: 14, color: Colors.black87),
-        bodySmall: TextStyle(fontSize: 13, color: Colors.black54),
-      ),
-    );
-
-    return MaterialApp(
+    return CupertinoApp(
       title: 'App Navegación',
-      theme: theme,
+      theme: const CupertinoThemeData(
+        primaryColor: CupertinoColors.black,
+        scaffoldBackgroundColor: Color(0xFFF2F2F7),
+        barBackgroundColor: Color(0xFFFAFAFA),
+        textTheme: CupertinoTextThemeData(
+          textStyle: TextStyle(fontSize: 17, color: CupertinoColors.black),
+          navTitleTextStyle: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: CupertinoColors.black,
+          ),
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
@@ -69,8 +42,9 @@ class StartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
+    return CupertinoPageScaffold(
+      backgroundColor: const Color(0xFFF2F2F7),
+      child: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
@@ -82,11 +56,11 @@ class StartPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: CupertinoColors.white,
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.04),
+                          color: const Color(0x0A000000),
                           blurRadius: 8,
                         ),
                       ],
@@ -103,8 +77,9 @@ class StartPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
-                                Icons.layers,
-                                color: Colors.black54,
+                                CupertinoIcons.layers_alt,
+                                color: CupertinoColors.systemGrey,
+                                size: 28,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -114,16 +89,18 @@ class StartPage extends StatelessWidget {
                                 children: [
                                   Text(
                                     'Bienvenido',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.headlineSmall,
+                                    style: CupertinoTheme.of(context)
+                                        .textTheme
+                                        .navTitleTextStyle
+                                        .copyWith(fontSize: 20),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     'Gestor de tareas',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: CupertinoColors.systemGrey,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -133,15 +110,10 @@ class StartPage extends StatelessWidget {
                         const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          child: FilledButton(
+                          child: CupertinoButton.filled(
                             onPressed: () => Navigator.pushReplacementNamed(
                               context,
                               '/main',
-                            ),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF111111),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              textStyle: const TextStyle(fontSize: 16),
                             ),
                             child: const Text('Entrar'),
                           ),
@@ -167,13 +139,44 @@ class MainMenuPage extends StatefulWidget {
 }
 
 class _MainMenuPageState extends State<MainMenuPage> {
-  String _title = 'Home';
+  int _selectedIndex = 0;
+
+  final List<String> _titles = ['Home', 'Profile', 'Tareas'];
+
+  void _showLogoutDialog(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (BuildContext dialogContext) => CupertinoAlertDialog(
+        title: const Text('Cerrar sesión'),
+        content: const Text('¿Estás seguro de que deseas salir?'),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('Cancelar'),
+            onPressed: () => Navigator.pop(dialogContext),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('Salir'),
+            onPressed: () {
+              Navigator.pop(dialogContext); // Cierra el diálogo
+              // Navega hasta la raíz y reemplaza con StartPage
+              Navigator.of(
+                context,
+                rootNavigator: true,
+              ).pushNamedAndRemoveUntil('/', (route) => false);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildContent() {
-    switch (_title) {
-      case 'Profile':
-        return const Center(child: Text('Perfil (desde menú)'));
-      case 'Tareas':
+    switch (_selectedIndex) {
+      case 1:
+        return const ProfilePage();
+      case 2:
         return const TasksPage();
       default:
         return _homeContent();
@@ -192,13 +195,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: CupertinoColors.white,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
-                    BoxShadow(
-                      color: Color.fromRGBO(0, 0, 0, 0.03),
-                      blurRadius: 8,
-                    ),
+                    BoxShadow(color: const Color(0x08000000), blurRadius: 8),
                   ],
                 ),
                 child: Row(
@@ -210,7 +210,11 @@ class _MainMenuPageState extends State<MainMenuPage> {
                         color: const Color(0xFFF0F0F1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.dashboard, color: Colors.black54),
+                      child: const Icon(
+                        CupertinoIcons.square_grid_2x2,
+                        color: CupertinoColors.systemGrey,
+                        size: 28,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -219,12 +223,18 @@ class _MainMenuPageState extends State<MainMenuPage> {
                         children: [
                           Text(
                             'Hola, Usuario',
-                            style: Theme.of(context).textTheme.headlineSmall,
+                            style: CupertinoTheme.of(context)
+                                .textTheme
+                                .navTitleTextStyle
+                                .copyWith(fontSize: 20),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             'Resumen rápido de tu espacio',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: CupertinoColors.systemGrey,
+                            ),
                           ),
                         ],
                       ),
@@ -233,126 +243,53 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _onSelect(String item) {
-    Navigator.pop(context); // cerrar drawer
-    if (item == 'Home') {
-      setState(() => _title = 'Home');
-    } else if (item == 'Profile') {
-      Navigator.pushNamed(context, '/profile');
-    } else if (item == 'Tareas') {
-      Navigator.pushNamed(context, '/tasks');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        surfaceTintColor: Colors.white,
-      ),
-      drawer: Drawer(
-        backgroundColor: const Color(0xFFF7F7F8),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.04),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(Icons.person, color: Colors.black54),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Usuario',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'usuario@ejemplo.com',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              const SizedBox(height: 8),
-              _drawerItem(
-                icon: Icons.home_outlined,
-                label: 'Home',
-                onTap: () => _onSelect('Home'),
-              ),
-              _drawerItem(
-                icon: Icons.person_outline,
-                label: 'Profile',
-                onTap: () => _onSelect('Profile'),
-              ),
-              _drawerItem(
-                icon: Icons.checklist_rtl,
-                label: 'Tareas',
-                onTap: () => _onSelect('Tareas'),
-              ),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Cerrar sesión'),
-                ),
-              ),
-            ],
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() => _selectedIndex = index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.home),
+            label: 'Home',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.person),
+            label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.check_mark_circled),
+            label: 'Tareas',
+          ),
+        ],
       ),
-      body: SafeArea(child: _buildContent()),
-    );
-  }
-
-  Widget _drawerItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.black54),
-      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      horizontalTitleGap: 8,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      tabBuilder: (context, index) {
+        return CupertinoTabView(
+          builder: (context) {
+            return CupertinoPageScaffold(
+              navigationBar: CupertinoNavigationBar(
+                middle: Text(_titles[_selectedIndex]),
+                trailing: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: const Icon(CupertinoIcons.square_arrow_right),
+                  onPressed: () => _showLogoutDialog(context),
+                ),
+              ),
+              child: SafeArea(child: _buildContent()),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -365,12 +302,12 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _surnameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
+  DateTime _birthDate = DateTime(2000, 1, 1);
 
   @override
   void dispose() {
@@ -383,41 +320,145 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _save() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Mostrar resumen rápido (en app real persistirías los datos)
-      final summary = StringBuffer();
-      summary.writeln('${_nameCtrl.text} ${_surnameCtrl.text}');
-      summary.writeln(_emailCtrl.text);
-      summary.writeln(_phoneCtrl.text);
-      summary.writeln('Dirección: ${_addressCtrl.text}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Perfil guardado\n${summary.toString()}')),
-      );
-      Navigator.pop(context);
-    }
+    // Mostrar resumen rápido (en app real persistirías los datos)
+    final summary = StringBuffer();
+    summary.writeln('${_nameCtrl.text} ${_surnameCtrl.text}');
+    summary.writeln(_emailCtrl.text);
+    summary.writeln(_phoneCtrl.text);
+    summary.writeln('Dirección: ${_addressCtrl.text}');
+    summary.writeln(
+      'Fecha de nacimiento: ${_birthDate.day}/${_birthDate.month}/${_birthDate.year}',
+    );
+
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Perfil guardado'),
+        content: Text(summary.toString()),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _notionField({
-    required TextEditingController controller,
-    String? label,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: const Color(0xFFF7F7F8),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+  void _showDatePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        color: CupertinoColors.white,
+        child: Column(
+          children: [
+            Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: CupertinoColors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: CupertinoColors.systemGrey4,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Text('Cancelar'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  CupertinoButton(
+                    child: const Text('Listo'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() {});
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoTheme(
+                data: CupertinoThemeData(
+                  textTheme: CupertinoTextThemeData(
+                    dateTimePickerTextStyle: TextStyle(
+                      color: CupertinoColors.black,
+                      fontSize: 22,
+                    ),
+                  ),
+                ),
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: _birthDate,
+                  maximumDate: DateTime.now(),
+                  minimumYear: 1900,
+                  maximumYear: DateTime.now().year,
+                  onDateTimeChanged: (DateTime newDate) {
+                    setState(() => _birthDate = newDate);
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 14,
+      ),
+    );
+  }
+
+  Widget _cupertinoField({
+    required TextEditingController controller,
+    String? placeholder,
+    TextInputType? keyboardType,
+  }) {
+    return CupertinoTextField(
+      controller: controller,
+      placeholder: placeholder,
+      keyboardType: keyboardType,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      style: const TextStyle(color: CupertinoColors.black, fontSize: 17),
+      placeholderStyle: const TextStyle(
+        color: CupertinoColors.systemGrey,
+        fontSize: 17,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F8),
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
+
+  Widget _dateField() {
+    return GestureDetector(
+      onTap: _showDatePicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F8),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${_birthDate.day}/${_birthDate.month}/${_birthDate.year}',
+              style: const TextStyle(
+                fontSize: 17,
+                color: CupertinoColors.black,
+              ),
+            ),
+            const Icon(
+              CupertinoIcons.calendar,
+              color: CupertinoColors.systemGrey,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
@@ -425,96 +466,118 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Registro de usuario')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Padding(
+    return CupertinoPageScaffold(
+      child: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            largeTitle: Text(
+              'Registro de Usuario',
+              style: TextStyle(color: CupertinoColors.black),
+            ),
+            backgroundColor: Color(0xFFFAFAFA),
+            border: Border(
+              bottom: BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
+            ),
+          ),
+          SliverSafeArea(
+            top: false,
+            sliver: SliverPadding(
               padding: const EdgeInsets.all(20.0),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0x0A000000),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Información personal',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: CupertinoTheme.of(
+                            context,
+                          ).textTheme.navTitleTextStyle.copyWith(fontSize: 16),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
-                              child: _notionField(
+                              child: _cupertinoField(
                                 controller: _nameCtrl,
-                                label: 'Nombre',
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? 'Ingrese el nombre'
-                                    : null,
+                                placeholder: 'Nombre',
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _notionField(
+                              child: _cupertinoField(
                                 controller: _surnameCtrl,
-                                label: 'Apellidos',
+                                placeholder: 'Apellidos',
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _notionField(
+                        _cupertinoField(
                           controller: _emailCtrl,
-                          label: 'Email',
+                          placeholder: 'Email',
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return 'Ingrese el email';
-                            }
-                            final emailRegex = RegExp(
-                              r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}",
-                            );
-                            if (!emailRegex.hasMatch(v)) {
-                              return 'Email inválido';
-                            }
-                            return null;
-                          },
                         ),
                         const SizedBox(height: 12),
-                        _notionField(
+                        _cupertinoField(
                           controller: _phoneCtrl,
-                          label: 'Teléfono',
+                          placeholder: 'Teléfono',
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 12),
-                        _notionField(
+                        _cupertinoField(
                           controller: _addressCtrl,
-                          label: 'Dirección',
+                          placeholder: 'Dirección',
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 4,
+                                bottom: 6,
+                              ),
+                              child: Text(
+                                'Fecha de nacimiento',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: CupertinoColors.systemGrey,
+                                ),
+                              ),
+                            ),
+                            _dateField(),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          child: FilledButton.tonal(
+                          child: CupertinoButton.filled(
                             onPressed: _save,
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 14.0),
-                              child: Text('Guardar'),
-                            ),
+                            child: const Text('Guardar'),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                ]),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -530,71 +593,178 @@ class TasksPage extends StatelessWidget {
       {'title': 'Comprar materiales', 'done': false},
       {'title': 'Enviar informe', 'done': true},
       {'title': 'Reunión con el equipo', 'done': false},
+      {'title': 'Comprar materiales', 'done': false},
+      {'title': 'Enviar informe', 'done': true},
+      {'title': 'Reunión con el equipo', 'done': false},
+      {'title': 'Comprar materiales', 'done': false},
+      {'title': 'Enviar informe', 'done': true},
+      {'title': 'Reunión con el equipo', 'done': false},
+      {'title': 'Comprar materiales', 'done': false},
+      {'title': 'Enviar informe', 'done': true},
+      {'title': 'Reunión con el equipo', 'done': false},
     ];
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Registro de tareas')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: Padding(
+    return CupertinoPageScaffold(
+      child: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            largeTitle: Text(
+              'Mis Tareas',
+              style: TextStyle(color: CupertinoColors.black),
+            ),
+            backgroundColor: Color(0xFFFAFAFA),
+            border: Border(
+              bottom: BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
+            ),
+          ),
+          SliverSafeArea(
+            top: false,
+            sliver: SliverPadding(
               padding: const EdgeInsets.all(16.0),
-              child: ListView.separated(
-                padding: EdgeInsets.zero,
-                itemCount: tasks.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
                   final item = tasks[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.03),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: ListTile(
-                      leading: Container(
-                        width: 36,
-                        height: 36,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GestureDetector(
+                      onLongPress: () {
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (BuildContext popupContext) =>
+                              CupertinoActionSheet(
+                                title: Text(item['title'] as String),
+                                message: const Text('¿Qué deseas hacer?'),
+                                actions: [
+                                  CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      Navigator.pop(popupContext);
+                                      // Aquí iría la lógica de editar
+                                    },
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(CupertinoIcons.pencil, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Editar'),
+                                      ],
+                                    ),
+                                  ),
+                                  CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      Navigator.pop(popupContext);
+                                      // Aquí iría la lógica de marcar como completada
+                                    },
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.check_mark_circled,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Marcar como completada'),
+                                      ],
+                                    ),
+                                  ),
+                                  CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      Navigator.pop(popupContext);
+                                      // Aquí iría la lógica de eliminar
+                                    },
+                                    isDestructiveAction: true,
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(CupertinoIcons.delete, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Eliminar'),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                cancelButton: CupertinoActionSheetAction(
+                                  onPressed: () => Navigator.pop(popupContext),
+                                  child: const Text('Cancelar'),
+                                ),
+                              ),
+                        );
+                      },
+                      child: Container(
                         decoration: BoxDecoration(
-                          color: (item['done'] as bool)
-                              ? const Color(0xFFEFF8F1)
-                              : const Color(0xFFF0F0F1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: CupertinoColors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0x08000000),
+                              blurRadius: 8,
+                            ),
+                          ],
                         ),
-                        child: Icon(
-                          item['done'] as bool
-                              ? Icons.check
-                              : Icons.circle_outlined,
-                          color: (item['done'] as bool)
-                              ? Colors.green
-                              : Colors.black26,
-                          size: 18,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: (item['done'] as bool)
+                                      ? const Color(0xFFEFF8F1)
+                                      : const Color(0xFFF0F0F1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  item['done'] as bool
+                                      ? CupertinoIcons.check_mark
+                                      : CupertinoIcons.circle,
+                                  color: (item['done'] as bool)
+                                      ? CupertinoColors.systemGreen
+                                      : CupertinoColors.systemGrey2,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['title'] as String,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      (item['done'] as bool)
+                                          ? 'Completada'
+                                          : 'Pendiente',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: CupertinoColors.systemGrey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      title: Text(
-                        item['title'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        (item['done'] as bool) ? 'Completada' : 'Pendiente',
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
                       ),
                     ),
                   );
-                },
+                }, childCount: tasks.length),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
